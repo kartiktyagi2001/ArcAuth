@@ -4,8 +4,10 @@ import axios from 'axios';
 import jwt from 'jsonwebtoken';
 import qs from 'querystring';
 import { access } from "fs";
+import { de } from "zod/locales";
 
-const router = Router();
+const googleRouter = Router();
+const githubRouter = Router();
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
@@ -17,9 +19,17 @@ const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
 const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI!;
 const FRONTEND_URI = process.env.FRONTEND_URI!;
 
+//Routers
+googleRouter.get("/", Google)
+googleRouter.get('/callback', GoogleCallback)
+githubRouter.get('/', Github)
+githubRouter.get('/callback', GithubCallback)
 
-// Google route
-router.get("/auth/google", (req: Request, res: Response)=>{
+
+//Functions
+
+// Google router
+function Google(req: Request, res: Response){
     const params = qs.stringify({
         client_id: GOOGLE_CLIENT_ID,
         redirect_uri: GOOGLE_REDIRECT_URI,
@@ -30,10 +40,10 @@ router.get("/auth/google", (req: Request, res: Response)=>{
         state: "google"
     });
     res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
-})
+}
 
 // Google callback route
-router.get('/auth/google/callback', async (req: Request, res: Response)=>{
+async function GoogleCallback (req: Request, res: Response){
     const code = req.query.code as string; //app will send a code after consent of user
 
     if(!code)
@@ -41,7 +51,7 @@ router.get('/auth/google/callback', async (req: Request, res: Response)=>{
 
     try{
 
-        const cbParams = qs.stringify({
+        const params = qs.stringify({
             code,
             client_id: GOOGLE_CLIENT_ID,
             client_secret: GOOGLE_CLIENT_SECRET,
@@ -50,7 +60,7 @@ router.get('/auth/google/callback', async (req: Request, res: Response)=>{
         })
 
         //exchange code for access token
-        const tokenRes = await axios.post('https://oauth2.googleapis.com/token', cbParams, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
+        const tokenRes = await axios.post('https://oauth2.googleapis.com/token', params, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
         
         const {token} = tokenRes.data;  //token from google in exchange of code
 
@@ -65,4 +75,50 @@ router.get('/auth/google/callback', async (req: Request, res: Response)=>{
     } catch{
         res.status(500).send("Google Authentication Failed! Please Try Again!")
     }
-})
+}
+
+//Github Router
+function Github(req: Request, res: Response){
+    const params = qs.stringify({
+        client_id: GITHUB_CLIENT_ID,
+        redirect_uri: GITHUB_REDIRECT_URI,
+        scope:'read:user user:email',
+        state: 'github'
+    })
+
+    res.redirect(`https://github.com/login/oauth/authorize?${params}`); //consent screen
+}
+
+// github callback
+async function GithubCallback(req: Request, res: Response){
+    const code = req.query.code as string;
+
+    if(!code)
+        res.status(400).send('Access Denied!')
+
+    const params = {
+        code,
+        client_id: GITHUB_CLIENT_ID,
+        client_secret: GITHUB_CLIENT_SECRET,
+        redirect_uri: GITHUB_REDIRECT_URI
+    }
+
+    try{
+        const tokenRes = await axios.post('https://github.com/login/oauth/access_token', params, {headers:{Accept:'application/json'}});    //asking for access token in exchange of code
+
+        const accessToken = tokenRes.data.access_token;
+
+        const userRes = await axios.get('https://api.github.com/user', {headers: {Authorization: `token ${accessToken}`}});
+
+        const user = userRes.data;
+
+        const token = jwt.sign({sub:user.id, login: user.login, avatar: user.avatar_url}, JWT_SECRET)   //final token for client websites
+
+        res.redirect(`${FRONTEND_URI}?token=${token}`);
+    } catch(err){
+        console.error(err)
+        res.status(500).send('Github Authentication Failed!');
+    }
+}
+
+export default {googleRouter, githubRouter};
