@@ -18,7 +18,12 @@
     "db:generate": "turbo -F server db:generate",
     "db:migrate": "turbo -F server db:migrate"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "axios": "^1.12.2",
+    "jsonwebtoken": "^9.0.2",
+    "querystring": "^0.2.1"
+  },
   "devDependencies": {
     "turbo": "^2.5.4"
   },
