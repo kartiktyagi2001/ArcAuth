@@ -5,6 +5,7 @@ import jwt from 'jsonwebtoken';
 import qs from 'querystring';
 import { access } from "fs";
 import { de } from "zod/locales";
+import { Clients } from '../config/clients'
 
 const googleRouter = Router();
 const githubRouter = Router();
@@ -17,13 +18,27 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI!;
 const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI!;
-const FRONTEND_URI = process.env.FRONTEND_URI!;
 
 //Routers
 googleRouter.get("/", Google)
 googleRouter.get('/callback', GoogleCallback)
 githubRouter.get('/', Github)
 githubRouter.get('/callback', GithubCallback)
+
+const FRONTEND_URI = "http://dfteam.vercel.app/groups";
+
+// //helper function to know which app is using the auth service
+// function getClientApp(req: Request){
+//     const clientApp = req.query.client as string;
+
+//     if(!clientApp || !Clients[clientApp])
+//         console.log("Invalid Client App")
+
+//     FRONTEND_URI = Clients[clientApp].redirectUris[0];
+
+//     //test
+//     console.log(FRONTEND_URI);
+// }
 
 
 //Functions
