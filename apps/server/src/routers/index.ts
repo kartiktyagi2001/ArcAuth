@@ -62,9 +62,9 @@ async function GoogleCallback (req: Request, res: Response){
         //exchange code for access token
         const tokenRes = await axios.post('https://oauth2.googleapis.com/token', params, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
         
-        const {token} = tokenRes.data;  //token from google in exchange of code
+        const {id_token} = tokenRes.data;  //token from google in exchange of code
 
-        const user =  jwt.decode(token) as any; //decode the token to get user info
+        const user =  jwt.decode(id_token) as any; //decode the token to get user info
         
         // generating my own jwt token for clients 
         const finalToken = jwt.sign({sub: user.sub, email: user.email, name: user.name}, JWT_SECRET);
@@ -100,7 +100,7 @@ async function GithubCallback(req: Request, res: Response){
         code,
         client_id: GITHUB_CLIENT_ID,
         client_secret: GITHUB_CLIENT_SECRET,
-        redirect_uri: GITHUB_REDIRECT_URI
+        redirect_uri: GITHUB_REDIRECT_URI   //increases security by matching exactly what was sent in the original authorization request :)
     }
 
     try{
@@ -114,11 +114,11 @@ async function GithubCallback(req: Request, res: Response){
 
         const token = jwt.sign({sub:user.id, login: user.login, avatar: user.avatar_url}, JWT_SECRET)   //final token for client websites
 
-        res.redirect(`${FRONTEND_URI}?token=${token}`);
+        return res.redirect(`${FRONTEND_URI}?token=${token}`);
     } catch(err){
         console.error(err)
-        res.status(500).send('Github Authentication Failed!');
+        return res.status(500).send('Github Authentication Failed!');
     }
 }
 
-export default {googleRouter, githubRouter};
+export {googleRouter, githubRouter};
