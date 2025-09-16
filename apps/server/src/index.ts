@@ -25,7 +25,6 @@ app.get("/", (_req, res) => {
 app.use('/auth/google', googleRouter);
 app.use('/auth/github', githubRouter);
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-	console.log(`Server is running on port ${port}`);
+app.listen("0.0.0.0", () => {
+	console.log(`Server is running on Railway`);
 });
