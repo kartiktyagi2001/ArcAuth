@@ -5,7 +5,6 @@ import express from "express";
 import { googleRouter } from "./routers/index";
 import { githubRouter } from "./routers/index";
 
-
 const app = express();
 
 
@@ -25,6 +24,8 @@ app.get("/", (_req, res) => {
 app.use('/auth/google', googleRouter);
 app.use('/auth/github', githubRouter);
 
-app.listen("0.0.0.0", () => {
-	console.log(`Server is running on Railway`);
+const port = Number(process.env.PORT) || 8080;
+
+app.listen(port, "0.0.0.0", () => {
+	console.log(`Server is running on port ${port}`);
 });
