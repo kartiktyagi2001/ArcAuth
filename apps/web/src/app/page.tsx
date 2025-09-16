@@ -6,7 +6,7 @@ import { toast } from "sonner"
 
 export default function LoginPage() {
   const redirect = (provider: 'google' | 'github') => {
-    window.location.href = `http://localhost:3000/auth/${provider}`
+    window.location.href = `http://arcauth.up.railway.app/auth/${provider}`
     toast(`Redirecting to ${provider.charAt(0).toUpperCase() + provider.slice(1)} for authentication...`)
   }
 
