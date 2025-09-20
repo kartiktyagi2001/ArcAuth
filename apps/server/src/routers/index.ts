@@ -25,7 +25,7 @@ googleRouter.get('/callback', GoogleCallback)
 githubRouter.get('/', Github)
 githubRouter.get('/callback', GithubCallback)
 
-const FRONTEND_URI = "http://dfteam.vercel.app/groups";
+const FRONTEND_URI = process.env.FRONTEND_URI!;
 
 // //helper function to know which app is using the auth service
 // function getClientApp(req: Request){
